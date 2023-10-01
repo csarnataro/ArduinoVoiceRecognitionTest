@@ -105,8 +105,11 @@ static DSpotterSDKHL g_oDSpotterSDKHL;
 #define right_center 3
 #define right_left 4
 
-// bool right_on = false;
-// bool left_on = false;
+#define NUM_LED 3
+
+int slot;
+bool right_on = false;
+bool left_on = false;
 
 // Callback function for VR engine
 void VRCallback(int nFlag, int nID, int nScore, int nSG, int nEnergy) {
@@ -116,31 +119,42 @@ void VRCallback(int nFlag, int nID, int nScore, int nSG, int nEnergy) {
     Serial.print("GetResult: ");
     Serial.println(nID);
 
-    switch(nID) {
-      case 10000: // 10000 a destra
-      case 10002: // 10000 destra
-      case 10007: // 10007 frecce a destra
-      case 10010: // 10010 frecce destra
-        digitalWrite(left_right, HIGH);
-        digitalWrite(left_center, HIGH);
-        digitalWrite(left_left, HIGH);
-      break;
-      case 10001: // 10001	a sinistra
-      case 10003: // 10003	sinistra
-      case 10008: // 10008	frecce a sinistra
-      case 10011: // 10011	frecce sinistra
-        digitalWrite(right_right, HIGH);
-        digitalWrite(right_center, HIGH);
-        digitalWrite(right_left, HIGH);
+    switch (nID) {
+      case 10000:  // 10000 a destra
+      case 10002:  // 10000 destra
+      case 10007:  // 10007 frecce a destra
+      case 10010:  // 10010 frecce destra
+        right_on = true;
+        // digitalWrite(left_right, HIGH);
+        // digitalWrite(left_center, HIGH);
+        // digitalWrite(left_left, HIGH);
         break;
-      case 10005: // 10005	stop
-      case 10006: // 10006	frecce stop
-        digitalWrite(right_right, LOW);
-        digitalWrite(right_center, LOW);
-        digitalWrite(right_left, LOW);
-        digitalWrite(left_right, LOW);
-        digitalWrite(left_center, LOW);
-        digitalWrite(left_left, LOW);
+      case 10001:  // 10001	a sinistra
+      case 10003:  // 10003	sinistra
+      case 10008:  // 10008	frecce a sinistra
+      case 10011:  // 10011	frecce sinistra
+        left_on = true;
+
+        // digitalWrite(right_right, HIGH);
+        // digitalWrite(right_center, HIGH);
+        // digitalWrite(right_left, HIGH);
+        break;
+      case 10005:  // 10005	stop
+      case 10006:  // 10006	frecce stop
+        right_on = false;
+        left_on = false;
+        // digitalWrite(right_right, LOW);
+        // digitalWrite(right_center, LOW);
+        // digitalWrite(right_left, LOW);
+        // digitalWrite(left_right, LOW);
+        // digitalWrite(left_center, LOW);
+        // digitalWrite(left_left, LOW);
+        break;
+
+      case 10004:  //	quattro frecce
+      case 10009:  //frecce quattro frecce
+        right_on = true;
+        left_on = true;
         break;
       default:
         Serial.println("Not implemented yet!");
@@ -236,15 +250,101 @@ void setup() {
   digitalWrite(right_right, LOW);
   digitalWrite(right_center, LOW);
   digitalWrite(right_left, LOW);
-
 }
 
 void loop() {
   // Do VR
   g_oDSpotterSDKHL.DoVR();
   unsigned long time = millis();
-  int result = time % 1000;
-  Serial.print("****************** => ");
-  Serial.println(result);
+  unsigned long millis_in_second = time % 1000;
+  unsigned long current_slot = millis_in_second / 100;
+  if (slot != current_slot) {
+    slot = current_slot;
+    Serial.print("****************** seconds: => ");
+    Serial.print(millis_in_second);
+    Serial.print("    slot => ");
+    Serial.println(current_slot);
+
+  }
+  switch (slot) {
+    case 0:
+      if (right_on) {
+        digitalWrite(right_left, HIGH);
+        // digitalWrite(right_center, HIGH);
+        // digitalWrite(right_right, HIGH);
+      } else {
+        digitalWrite(right_right, LOW);
+        digitalWrite(right_center, LOW);
+        digitalWrite(right_left, LOW);
+      }
+      if (left_on) {
+        digitalWrite(left_right, HIGH);
+        // digitalWrite(left_center, HIGH);
+        // digitalWrite(left_left, HIGH);
+      } else {
+        digitalWrite(left_right, LOW);
+        digitalWrite(left_center, LOW);
+        digitalWrite(left_left, LOW);
+      }
+      break;
+    case 1:
+      if (right_on) {
+        digitalWrite(right_left, HIGH);
+        digitalWrite(right_center, HIGH);
+        // digitalWrite(right_right, HIGH);
+      } else {
+        digitalWrite(right_right, LOW);
+        digitalWrite(right_center, LOW);
+        digitalWrite(right_left, LOW);
+      }
+      if (left_on) {
+        digitalWrite(left_right, HIGH);
+        digitalWrite(left_center, HIGH);
+        // digitalWrite(left_left, HIGH);
+      } else {
+        digitalWrite(left_right, LOW);
+        digitalWrite(left_center, LOW);
+        digitalWrite(left_left, LOW);
+      }
+      break;
+    case 2:
+      if (right_on) {
+        digitalWrite(right_left, HIGH);
+        digitalWrite(right_center, HIGH);
+        digitalWrite(right_right, HIGH);
+      } else {
+        digitalWrite(right_right, LOW);
+        digitalWrite(right_center, LOW);
+        digitalWrite(right_left, LOW);
+      }
+      if (left_on) {
+        digitalWrite(left_right, HIGH);
+        digitalWrite(left_center, HIGH);
+        digitalWrite(left_left, HIGH);
+      } else {
+        digitalWrite(left_right, LOW);
+        digitalWrite(left_center, LOW);
+        digitalWrite(left_left, LOW);
+      }
+      break;
+    case 3:
+        digitalWrite(right_left, LOW);
+        digitalWrite(right_center, LOW);
+        digitalWrite(right_right, LOW);
+        digitalWrite(left_right, LOW);
+        digitalWrite(left_left, LOW);
+        digitalWrite(left_center, LOW);
+      break;
+    default:
+        digitalWrite(right_left, LOW);
+        digitalWrite(right_center, LOW);
+        digitalWrite(right_right, LOW);
+        digitalWrite(left_right, LOW);
+        digitalWrite(left_center, LOW);
+        digitalWrite(left_left, LOW);
+      break;
+
+
+  }
 
 }
