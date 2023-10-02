@@ -125,6 +125,9 @@ void VRCallback(int nFlag, int nID, int nScore, int nSG, int nEnergy) {
       case 10007:  // 10007 frecce a destra
       case 10010:  // 10010 frecce destra
         right_on = true;
+        if (left_on) {
+          left_on = false;
+        }
         // digitalWrite(left_right, HIGH);
         // digitalWrite(left_center, HIGH);
         // digitalWrite(left_left, HIGH);
@@ -134,6 +137,9 @@ void VRCallback(int nFlag, int nID, int nScore, int nSG, int nEnergy) {
       case 10008:  // 10008	frecce a sinistra
       case 10011:  // 10011	frecce sinistra
         left_on = true;
+        if (right_on) {
+          right_on = false;
+        }
 
         // digitalWrite(right_right, HIGH);
         // digitalWrite(right_center, HIGH);
