@@ -78,8 +78,8 @@
 */
 #include <Arduino.h>
 #include <DSpotterSDK_MakerHL.h>
-// #include <LED_Control.h>
-#include <Adafruit_NeoPixel.h>
+#include <NeoPixelConnect.h>
+#include <LED_Control.h>
 
 // The DSpotter License Data.
 #include "CybLicense.h"
@@ -98,23 +98,14 @@
 // The VR engine object. Only can exist one, otherwise not worked.
 static DSpotterSDKHL g_oDSpotterSDKHL;
 
-// #define left_right 10
-// #define left_center 11
-#define left_left 12
+#define RIGHT_PIN 4
+#define LEFT_PIN 7
+#define MAXIMUM_NUM_NEOPIXELS 9
 
-
-#define right_right 4
-// #define right_center 3
-// #define right_left 4
-
-#define NUM_LED 9
-
-Adafruit_NeoPixel pixels_right(NUM_LED, right_right, NEO_GRB + NEO_KHZ800);
-
-uint32_t magenta = pixels_right.Color(255, 0, 255);
+NeoPixelConnect rightStrip(RIGHT_PIN, MAXIMUM_NUM_NEOPIXELS, pio1, 0);
+NeoPixelConnect leftStrip(LEFT_PIN, MAXIMUM_NUM_NEOPIXELS, pio1, 2);
 
 unsigned long slot;
-unsigned long time_show;
 bool right_on = false;
 bool left_on = false;
 
@@ -122,7 +113,7 @@ bool left_on = false;
 void VRCallback(int nFlag, int nID, int nScore, int nSG, int nEnergy) {
   if (nFlag == DSpotterSDKHL::InitSuccess) {
     //ToDo
-    Serial.print("DSpotter initialized successfully");
+    Serial.println("DSpotter initialized successfully");
   } else if (nFlag == DSpotterSDKHL::GetResult) {
     Serial.print("GetResult: ");
     Serial.println(nID);
@@ -136,9 +127,6 @@ void VRCallback(int nFlag, int nID, int nScore, int nSG, int nEnergy) {
         if (left_on) {
           left_on = false;
         }
-        // digitalWrite(left_right, HIGH);
-        // digitalWrite(left_center, HIGH);
-        // digitalWrite(left_left, HIGH);
         break;
       case 10001:  // 10001	a sinistra
       case 10003:  // 10003	sinistra
@@ -148,21 +136,11 @@ void VRCallback(int nFlag, int nID, int nScore, int nSG, int nEnergy) {
         if (right_on) {
           right_on = false;
         }
-
-        // digitalWrite(right_right, HIGH);
-        // digitalWrite(right_center, HIGH);
-        // digitalWrite(right_left, HIGH);
         break;
       case 10005:  // 10005	stop
       case 10006:  // 10006	frecce stop
         right_on = false;
         left_on = false;
-        // digitalWrite(right_right, LOW);
-        // digitalWrite(right_center, LOW);
-        // digitalWrite(right_left, LOW);
-        // digitalWrite(left_right, LOW);
-        // digitalWrite(left_center, LOW);
-        // digitalWrite(left_left, LOW);
         break;
 
       case 10004:  //	quattro frecce
@@ -191,8 +169,6 @@ void VRCallback(int nFlag, int nID, int nScore, int nSG, int nEnergy) {
       10010	frecce destra
       10011	frecce sinistra
       */
-
-
     /*
       When getting an recognition result,
       the following index and scores are also return to the VRCallback function:
@@ -210,13 +186,11 @@ void VRCallback(int nFlag, int nID, int nScore, int nSG, int nEnergy) {
     Serial.println(nID);
     switch (nID) {
       case DSpotterSDKHL::TriggerStage:
-        Serial.println("In trigger mode");
-        // LED_RGB_Off();
-        // LED_BUILTIN_Off();
+        LED_RGB_Off();
+        LED_BUILTIN_Off();
         break;
       case DSpotterSDKHL::CommandStage:
-        Serial.println("In command mode");
-        // LED_BUILTIN_On();
+        LED_BUILTIN_On();
         break;
       default:
         break;
@@ -236,7 +210,7 @@ void VRCallback(int nFlag, int nID, int nScore, int nSG, int nEnergy) {
 
 void setup() {
   // Init LED control
-  // LED_Init_All();
+  LED_Init_All();
 
   // Init Serial output for show debug info
   Serial.begin(9600);
@@ -248,55 +222,14 @@ void setup() {
   if (g_oDSpotterSDKHL.Init(DSPOTTER_LICENSE, sizeof(DSPOTTER_LICENSE), DSPOTTER_MODEL, VRCallback) != DSpotterSDKHL::Success)
     return;
 
-    pixels_right.begin();
-    for (int i= 0; i < 3; i++) {
-      pixels_right.fill(magenta, 0, 9);
-      // pixels_right.show();
-      delay(250);
-      pixels_right.clear();
-      // pixels_right.show();
-      delay(250);
-    }
-
-  // pinMode(left_right, OUTPUT);
-  // pinMode(left_center, OUTPUT);
-  // pinMode(left_left, OUTPUT);
-  // pinMode(right_right, OUTPUT);
-  // pinMode(right_center, OUTPUT);
-  // pinMode(right_left, OUTPUT);
-
-  // digitalWrite(left_right, HIGH);
-  // digitalWrite(left_center, HIGH);
-  // digitalWrite(left_left, HIGH);
-  // digitalWrite(right_right, HIGH);
-  // digitalWrite(right_center, HIGH);
-  // digitalWrite(right_left, HIGH);
-  // delay(500);
-  // digitalWrite(left_right, LOW);
-  // digitalWrite(left_center, LOW);
-  // digitalWrite(left_left, LOW);
-  // digitalWrite(right_right, LOW);
-  // digitalWrite(right_center, LOW);
-  // digitalWrite(right_left, LOW);
-
-  time_show = millis();
-}
-
-void animate_right(int slot) {
-  pixels_right.clear();
-  // for (int i = 0; i < slot; i++) {
-  pixels_right.setPixelColor(slot, magenta);
-  // }
-}
-
-void manageSlot(int slot) {
-  if (right_on) {
-    animate_right(slot);
-    Serial.print("Slot is: ");
-    Serial.println(slot);
-  } else {
-    Serial.println("Clearing right leds");
-    pixels_right.clear();
+  // pixels_right.begin();
+  for (int i = 0; i < 3; i++) {
+    rightStrip.neoPixelFill(0, 255, 255, true);
+    leftStrip.neoPixelFill(255, 165, 0, true);
+    delay(250);
+    rightStrip.neoPixelClear(true);
+    leftStrip.neoPixelClear(true);
+    delay(250);
   }
 }
 
@@ -304,65 +237,33 @@ void loop() {
   // Do VR
   g_oDSpotterSDKHL.DoVR();
   unsigned long time = millis();
-  unsigned long millis_in_second = time % 10000;
-  unsigned long current_slot = millis_in_second / 1000;
+  unsigned long millis_in_second = time % 1000;
+  unsigned long current_slot = millis_in_second / 100;
   if (slot != current_slot) {
     slot = current_slot;
-    Serial.print("    slot => ");
-    Serial.println(current_slot);
-    manageSlot(slot);
+    // Serial.print("    slot => ");
+    // Serial.println(current_slot);
     // Serial.print("****************** seconds: => ");
     // Serial.print(millis_in_second);
     if (right_on) {
-      // pixels_right.show();
+      if (slot == MAXIMUM_NUM_NEOPIXELS) {
+        rightStrip.neoPixelClear(true);
+      } else {
+        rightStrip.neoPixelSetValue(slot, 0, 255, 255, true);
+      }
     } else {
-      pixels_right.clear();
+      rightStrip.neoPixelClear(true);
     }
 
-  }
-  // switch (slot) {
-  //   case 0:
-  //     if (right_on) {
-  //       pixels_right.setPixelColor(0, pixels_right.Color(150, 0, 0));
-  //     } else {
-  //       pixels_right.clear();
-  //     }
-  //     break;
-  //   case 1:
-  //     if (right_on) {
-  //       pixels_right.setPixelColor(0, pixels_right.Color(150, 0, 0));
-  //       pixels_right.setPixelColor(1, pixels_right.Color(150, 0, 0));
-  //     } else {
-  //       pixels_right.clear();
-  //     }
-  //     break;
-  //   case 2:
-  //     if (right_on) {
-  //       pixels_right.setPixelColor(0, pixels_right.Color(150, 0, 0));
-  //       pixels_right.setPixelColor(1, pixels_right.Color(150, 0, 0));
-  //       pixels_right.setPixelColor(2, pixels_right.Color(150, 0, 0));
-  //     } else {
-  //       pixels_right.clear();
-  //     }
-  //     break;
-  //   case 3:
-  //     pixels_right.clear();
-  //   break;
-  //   default:
-  //     pixels_right.clear();
-  //     break;
-  // }
-
-  unsigned long now = millis();
-  if (now - time_show > 500) {
-    //Serial.println("ritardo");
-    time_show = now;
-    if (right_on) {
-      // pixels_right.show();
-      // pixels_right.begin();
-    }
     if (left_on) {
-      // pixels_left.show();
+      if (slot == MAXIMUM_NUM_NEOPIXELS) { // <- clear everything at last iteration
+        leftStrip.neoPixelClear(true);
+
+      } else {
+        leftStrip.neoPixelSetValue(slot, 255, 165, 0, true);
+      }
+    } else {
+      leftStrip.neoPixelClear(true);
     }
   }
 }
