@@ -101,6 +101,7 @@ static DSpotterSDKHL g_oDSpotterSDKHL;
 #define RIGHT_PIN 4
 #define LEFT_PIN 7
 #define MAXIMUM_NUM_NEOPIXELS 9
+#define BUZZER_PIN 8
 
 NeoPixelConnect rightStrip(RIGHT_PIN, MAXIMUM_NUM_NEOPIXELS, pio1, 0);
 NeoPixelConnect leftStrip(LEFT_PIN, MAXIMUM_NUM_NEOPIXELS, pio1, 2);
@@ -182,8 +183,6 @@ void VRCallback(int nFlag, int nID, int nScore, int nSG, int nEnergy) {
       */
     //ToDo
   } else if (nFlag == DSpotterSDKHL::ChangeStage) {
-    Serial.print("nID: ");
-    Serial.println(nID);
     switch (nID) {
       case DSpotterSDKHL::TriggerStage:
         LED_RGB_Off();
@@ -214,7 +213,7 @@ void setup() {
 
   // Init Serial output for show debug info
   Serial.begin(9600);
-  while (!Serial)
+  while (!Serial && millis() < 2000)
     ;
   DSpotterSDKHL::ShowDebugInfo(true);
 
@@ -224,9 +223,12 @@ void setup() {
 
   // pixels_right.begin();
   for (int i = 0; i < 3; i++) {
+    LED_BUILTIN_On();
     rightStrip.neoPixelFill(0, 255, 255, true);
     leftStrip.neoPixelFill(255, 165, 0, true);
     delay(250);
+
+    LED_BUILTIN_Off();
     rightStrip.neoPixelClear(true);
     leftStrip.neoPixelClear(true);
     delay(250);
@@ -239,6 +241,12 @@ void loop() {
   unsigned long time = millis();
   unsigned long millis_in_second = time % 1000;
   unsigned long current_slot = millis_in_second / 100;
+  if ((right_on || left_on) && slot == 0) {
+    tone(BUZZER_PIN, 400);
+  } else {
+    noTone(BUZZER_PIN);
+
+  }
   if (slot != current_slot) {
     slot = current_slot;
     // Serial.print("    slot => ");
